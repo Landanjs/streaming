@@ -16,8 +16,10 @@ img2dataset \
     --output_folder laion400m-data \
     --processes_count 32 \
     --thread_count 128 \
+    --resize_mode center_crop \
     --image_size 256 \
+    --min_image_size 256 \
     --save_additional_columns '["NSFW","similarity","LICENSE"]' \
-    --enable_wandb $ENABLE_WANDB
+    --enable_wandb True
 
 touch laion400m-data/done

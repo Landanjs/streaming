@@ -179,7 +179,7 @@ def upload(local: str, remote: str) -> None:
     """
     local = local.replace(' ', '\\ ')
     remote = remote.replace(' ', '\\ ')
-    cmd = f'aws s3 cp {local} {remote}'
+    cmd = f'oci os object put -ns axhe5a72vzpp -bn mosaicml-internal-dataset-laion400m --file {local}'
     if os.system(cmd):
         raise RuntimeError(f'Download failed: {cmd}.')
 
