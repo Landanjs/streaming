@@ -16,7 +16,7 @@ img2dataset \
     --output_folder laion400m-data \
     --processes_count 32 \
     --thread_count 128 \
-    --resize_mode center_crop \
+    --resize_mode no \
     --image_size 256 \
     --min_image_size 256 \
     --save_additional_columns '["NSFW","similarity","LICENSE"]' \
