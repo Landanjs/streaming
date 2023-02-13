@@ -62,6 +62,10 @@ def each_downloaded_shard(local: str) -> Iterator[int]:
     count = len(list(filter(lambda s: s.endswith('_stats.json'), basenames)))
     for idx in range(count):
         stats_filename = os.path.join(local, f'{idx:05}_stats.json')
+        for _ in range(60):
+            if os.path.exists(stats_filename):
+                break
+            sleep(1)
         if not os.path.exists(stats_filename):
             raise RuntimeError('Stats file is missing.')
         yield idx
@@ -179,7 +183,7 @@ def upload(local: str, remote: str) -> None:
     """
     local = local.replace(' ', '\\ ')
     remote = remote.replace(' ', '\\ ')
-    cmd = f'oci os object put -ns axhe5a72vzpp -bn mosaicml-internal-dataset-laion400m --file {local}'
+    cmd = f'oci os object put -ns axhe5a72vzpp -bn mosaicml-internal-dataset-laion400m --file {local} --name {remote}'
     if os.system(cmd):
         raise RuntimeError(f'Download failed: {cmd}.')
 
@@ -206,7 +210,7 @@ def convert_and_upload_shards(args: Namespace) -> bool:
         mds_dirname = os.path.join(args.local, f'{idx:05}.mds')
         mds_shard_filename = os.path.join(mds_dirname, 'shard.00000.mds')
         mds_index_filename = os.path.join(mds_dirname, 'index.json')
-        remote_shard_filename = os.path.join(args.remote, f'shard.{idx:05}.mds')
+        remote_shard_filename = os.path.join('', f'shard.{idx:05}.mds')
         if os.path.exists(mds_dirname):
             if not os.path.exists(mds_shard_filename):
                 raise RuntimeError(f'MDS shard file is missing: {mds_shard_filename}.')
