@@ -183,7 +183,7 @@ def upload(local: str, remote: str) -> None:
     """
     local = local.replace(' ', '\\ ')
     remote = remote.replace(' ', '\\ ')
-    cmd = f'oci os object put -ns axhe5a72vzpp -bn mosaicml-internal-dataset-laion400m --file {local} --name {remote}'
+    cmd = f'oci os object put -ns axhe5a72vzpp -bn mosaicml-internal-dataset-laion400m-2 --file {local} --name {remote}'
     if os.system(cmd):
         raise RuntimeError(f'Download failed: {cmd}.')
 

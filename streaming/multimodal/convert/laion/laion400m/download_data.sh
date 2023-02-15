@@ -14,8 +14,8 @@ img2dataset \
     --caption_col TEXT \
     --output_format parquet \
     --output_folder laion400m-data \
-    --processes_count 64 \
-    --thread_count 256 \
+    --processes_count 128 \
+    --thread_count 512 \
     --resize_mode no \
     --image_size 256 \
     --min_image_size 256 \
