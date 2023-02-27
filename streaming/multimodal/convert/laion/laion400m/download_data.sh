@@ -8,18 +8,18 @@ else
 fi
 
 img2dataset \
-    --url_list laion400m-meta \
+    --url_list /workdisk/landan/laion/laion400m-meta \
     --input_format parquet \
     --url_col URL \
     --caption_col TEXT \
     --output_format parquet \
-    --output_folder laion400m-data \
-    --processes_count 128 \
-    --thread_count 512 \
+    --output_folder /tmp/landan-laion400m-data \
+    --processes_count 64 \
+    --thread_count 256 \
     --resize_mode no \
     --image_size 256 \
     --min_image_size 256 \
     --save_additional_columns '["NSFW","similarity","LICENSE"]' \
     --enable_wandb True
 
-touch laion400m-data/done
+touch /tmp/landan-laion400m-data/done

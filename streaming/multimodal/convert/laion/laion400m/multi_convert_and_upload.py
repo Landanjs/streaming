@@ -30,7 +30,7 @@ def parse_args() -> Namespace:
                       help='Local directory containing downloaded shards in parquet format.')
     args.add_argument('--remote',
                       type=str,
-                      required=True,
+                      default='',
                       help='Remote path to upload MDS-formatted shards to.')
     args.add_argument('--keep_parquet',
                       type=int,
@@ -48,6 +48,10 @@ def parse_args() -> Namespace:
                       type=float,
                       default=30,
                       help='Interval between polling for newly downloaded shards to process.')
+    args.add_argument('--n_processes',
+                      type=int,
+                      default=1,
+                      help="Number of processes to convert and upload MDS shards.")
     return args.parse_args()
 
 
@@ -79,6 +83,32 @@ def each_downloaded_shard(local: str) -> Iterator[int]:
             continue
         yield idx
 
+def each_done_shard(local: str) -> Iterator[int]:
+    """Iterate over each downloaded shard.
+
+    Args:
+        local (str): Local directory containing shards.
+
+    Returns:
+        Iterator[int]: Each downloaded shard ID.
+    """
+    basenames = set(os.listdir(local))
+    count = len(list(filter(lambda s: s.endswith('_stats.json'), basenames)))
+    for idx in range(count):
+        stats_filename = os.path.join(local, f'{idx:05}_stats.json')
+        # for _ in range(60):
+        #     if os.path.exists(stats_filename):
+        #         break
+        #     print(f'Waiting for {stats_filename}')
+        #     sleep(1)
+        if not os.path.exists(stats_filename):
+            print(f"Shard {idx:05} isn't ready")
+            continue
+        # If the shard is already done, skip it.
+        done_filename = os.path.join(local, f'{idx:05}.done')
+        if os.path.exists(done_filename):
+            print(f'Shard {idx:05}: done')
+        yield idx
 
 def get_int(x: Union[float, int]) -> int:
     """Get an int field from pandas.
@@ -192,7 +222,7 @@ def upload(local: str, remote: str) -> None:
     """
     local = local.replace(' ', '\\ ')
     remote = remote.replace(' ', '\\ ')
-    cmd = f'oci os object put -ns axhe5a72vzpp -bn mosaicml-internal-dataset-laion400m --file {local} --name {remote}'
+    cmd = f'oci os object put -ns axhe5a72vzpp -bn mosaicml-internal-dataset-laion400m-3 --file {local} --name {remote}'
     if os.system(cmd):
         raise RuntimeError(f'Download failed: {cmd}.')
 
@@ -237,12 +267,13 @@ def convert_and_upload_shards(args: Namespace) -> bool:
     func = functools.partial(multi_proc, local=args.local, hashes=hashes, keep_parquet=args.keep_parquet, keep_mds=args.keep_mds)
     indices = [i for i in each_downloaded_shard(args.local)]
     print(indices)
-    with multiprocessing.Pool(16) as pool:
-        pool.map(func, indices)
+    with multiprocessing.Pool(args.n_processes) as pool:
+        if indices:
+            pool.map(func, indices)
 
     # Check for the "done" marker.
     filename = os.path.join(args.local, 'done')
-    return os.path.exists(filename)
+    return os.path.exists(filename) and not indices
 
 
 def collect_and_upload_index(args: Namespace) -> None:
@@ -252,7 +283,7 @@ def collect_and_upload_index(args: Namespace) -> None:
         args (Namespace): Command-line arguments.
     """
     infos = []
-    for idx in each_downloaded_shard(args.local):
+    for idx in each_done_shard(args.local):
         sub_index_filename = os.path.join(args.local, f'{idx:05}.mds', 'index.json')
         obj = json.load(open(sub_index_filename))
         info, = obj['shards']
