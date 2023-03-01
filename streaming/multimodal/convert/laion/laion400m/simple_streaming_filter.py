@@ -68,7 +68,7 @@ def noop_collate(batch):
 dataset = StreamingLAIONDataset(remote="oci://mosaicml-internal-dataset-laion400m-unfiltered2", local="/tmp/mds-cache/unfiltered-laion/")
 dataloader = DataLoader(dataset, batch_size=512, num_workers=64, collate_fn=noop_collate)
 
-with streaming.MDSWriter(out="oci://mosaicml-internal-dataset-laion/filtered3", columns=columns, compression=None, hashes=[], size_limit=256*(2**20), max_workers=64) as writer:
+with streaming.MDSWriter(out="oci://mosaicml-internal-dataset-laion/filtered", columns=columns, compression=None, hashes=[], size_limit=256*(2**20), max_workers=64) as writer:
     for i, sample_batch in tqdm(enumerate(dataloader)):
         for sample in sample_batch:
             if sample['status'] == 'success':
