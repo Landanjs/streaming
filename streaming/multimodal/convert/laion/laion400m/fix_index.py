@@ -8,7 +8,7 @@ from tqdm import tqdm
 def func(idx):
     name = f'shard.{idx:05}.mds'
     local_path = f'/tmp/laion-shards/{name}'
-    cmd = f'oci os object get -bn mosaicml-internal-dataset-laion --name {name} --file {local_path}'
+    cmd = f'oci os object get -bn mosaicml-internal-dataset-laion400m-unfiltered2 --name {name} --file {local_path} --region us-phoenix-1'
     if os.system(cmd):
         raise RuntimeError(f'download failed: {cmd}')
     with open(local_path, 'rb') as f:
@@ -39,7 +39,7 @@ def func(idx):
 
 from multiprocessing import Pool
 if __name__ == '__main__':
-    inds = list(range(29518))
+    inds = list(range(41_409))
     names = os.listdir('/tmp/laion-shards/')
     for name in names:
         num = int(name.split('.')[0])
