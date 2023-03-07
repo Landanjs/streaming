@@ -68,7 +68,6 @@ def filter_parquet_files(local: str) -> List:
         # If _stats.json file is present, the parquet file has finished downloading
         if filename.endswith('_stats.json'):
             idx = filename.split('_')[0]
-            print(idx)
 
             # Check if parquet file has already been converted into an MDS shard
             done_filename = os.path.join(local, f'{idx}.done')

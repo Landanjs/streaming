@@ -14,8 +14,8 @@ img2dataset \
     --caption_col caption \
     --output_format parquet \
     --output_folder /tmp/laion2b-processed \
-    --processes_count 64 \
-    --thread_count 128 \
+    --processes_count 32 \
+    --thread_count 64 \
     --resize_mode no \
     --compute_hash "md5" \
     --verify_hash '["md5","md5"]' \
