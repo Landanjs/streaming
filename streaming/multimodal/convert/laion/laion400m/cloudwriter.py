@@ -13,6 +13,8 @@ import warnings
 import numpy as np
 from pyarrow import parquet as pq
 from tqdm import tqdm, trange
+from multiprocessing import Pool
+from functools import partial
 
 from streaming import MDSWriter
 
@@ -127,6 +129,10 @@ def get_str(x: Optional[str]) -> str:
     """
     return x or ''
 
+def delete_parquets(shard, local):
+    parquet_filename = os.path.join(local, f'{shard}.parquet')
+    os.remove(parquet_filename)
+
 def convert_and_upload_shards(args: Namespace, writer) -> bool:
     """Process any newly downloaded shards.
 
@@ -185,9 +191,14 @@ def convert_and_upload_shards(args: Namespace, writer) -> bool:
             out.write('')
 
         # Delete parquet file
-        if not args.keep_parquet:
-            os.remove(parquet_filename)
+        # if not args.keep_parquet:
+        #     os.remove(parquet_filename)
         print(f'Shard {shard}: done')
+
+    # Delete parquet file
+    func = partial(delete_parquets, local=args.local)
+    with Pool() as pool:
+        pool.map(func, shards_to_process)
 
     # Check if the done file was written and there are no more shards to process
     shards_to_process = filter_parquet_files(local=args.local)
