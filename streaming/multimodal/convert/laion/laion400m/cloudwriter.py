@@ -128,10 +128,6 @@ def get_str(x: Optional[str]) -> str:
     """
     return x or ''
 
-def delete_parquets(shard, local):
-    parquet_filename = os.path.join(local, f'{shard}.parquet')
-    os.remove(parquet_filename)
-
 def convert_and_upload_shards(args: Namespace, writer) -> bool:
     """Process any newly downloaded shards.
 
@@ -190,14 +186,9 @@ def convert_and_upload_shards(args: Namespace, writer) -> bool:
             out.write('')
 
         # Delete parquet file
-        # if not args.keep_parquet:
-        #     os.remove(parquet_filename)
+        if not args.keep_parquet:
+            os.remove(parquet_filename)
         print(f'Shard {shard}: done')
-
-    # Delete parquet file
-    func = partial(delete_parquets, local=args.local)
-    with Pool() as pool:
-        pool.map(func, shards_to_process)
 
     # Check if the done file was written and there are no more shards to process
     shards_to_process = filter_parquet_files(local=args.local)
@@ -230,7 +221,13 @@ def main(args: Namespace) -> None:
         'jpg': 'bytes',
         'hash': 'int64',
     }
-    writer = MDSWriter(out=args.remote, columns=columns, compression=None, hash=[], size_limit=256*(2**20), max_workers=16)
+    writer = MDSWriter(out=args.remote, columns=columns, compression=None, hash=[], size_limit=256*(2**20), max_workers=64)
+    #remote_all = os.path.join(args.remote, 'all')
+    #remote_256 = os.path.join(args.remote, '256')
+    #writers = []
+    #writers.append(MDSWriter(out=remote_all, columns=columns, compression=None, hash=[], size_limit=256*(2**20), max_workers=64))
+    #writers.append()
+
     while True:
         last_poll = time()
         is_done, writer = convert_and_upload_shards(args, writer)
