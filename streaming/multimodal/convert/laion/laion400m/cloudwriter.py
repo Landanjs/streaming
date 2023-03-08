@@ -48,6 +48,7 @@ def parse_args() -> Namespace:
                       type=float,
                       default=30,
                       help='Interval between polling for newly downloaded shards to process.')
+    args.add_argument('--bin_resolutions', action='store_true')
     return args.parse_args()
 
 
@@ -178,7 +179,12 @@ def convert_and_upload_shards(args: Namespace, writer) -> bool:
                     'jpg': get_bytes(x['jpg']),
                     'hash': get_int(x['hash']),
                 }
-                writer.write(sample)
+                if isinstance(writer, list):
+                    writer[0].write(sample)
+                    if sample['width'] >= 256 and sample['height'] >= 256:
+                        writer[1].write(sample)
+                else:
+                    writer.write(sample)
 
         # Write .done file to indicate done with this parquet file
         done_filename = os.path.join(args.local, f'{shard}.done')
@@ -221,12 +227,15 @@ def main(args: Namespace) -> None:
         'jpg': 'bytes',
         'hash': 'int64',
     }
-    writer = MDSWriter(out=args.remote, columns=columns, compression=None, hash=[], size_limit=256*(2**20), max_workers=64)
-    #remote_all = os.path.join(args.remote, 'all')
-    #remote_256 = os.path.join(args.remote, '256')
-    #writers = []
-    #writers.append(MDSWriter(out=remote_all, columns=columns, compression=None, hash=[], size_limit=256*(2**20), max_workers=64))
-    #writers.append()
+
+    if args.bin_resolutions:
+        remote_all = os.path.join(args.remote, 'all')
+        remote_256 = os.path.join(args.remote, '256')
+        writer = []
+        writer.append(MDSWriter(out=remote_all, columns=columns, compression=None, hash=[], size_limit=256*(2**20), max_workers=64))
+        writer.append(MDSWriter(out=remote_256, columns=columns, compression=None, hash=[], size_limit=256*(2**20), max_workers=64))
+    else:
+        writer = MDSWriter(out=args.remote, columns=columns, compression=None, hash=[], size_limit=256*(2**20), max_workers=64)
 
     while True:
         last_poll = time()
