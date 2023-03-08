@@ -17,8 +17,6 @@ img2dataset \
     --processes_count 48 \
     --thread_count 96 \
     --resize_mode no \
-    --compute_hash "md5" \
-    --verify_hash '["md5","md5"]' \
     --save_additional_columns '["punsafe","pwatermark","similarity","hash"]' \
     --enable_wandb True
 

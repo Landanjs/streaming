@@ -246,7 +246,11 @@ def main(args: Namespace) -> None:
         elapsed = now - last_poll
         if elapsed < args.poll_interval:
             sleep(args.poll_interval - elapsed)
-    writer.finish()
+    if isinstance(writer, list):
+        writer[0].finish()
+        writer[1].finish()
+    else:
+        writer.finish()
 
 
 if __name__ == '__main__':
